@@ -29,14 +29,18 @@ def PredictGenderBayes(male_arr, female_arr, h):
    p_male = len(male_arr) * ((1/(math.sqrt(2*math.pi)*m_sigma))*math.exp((-0.5)*((h-m_mean)/m_sigma)**2))
    p_female = len(female_arr) * ((1/(math.sqrt(2*math.pi)*f_sigma))*math.exp((-0.5)*((h-f_mean)/f_sigma)**2))
 
-   if p_male > p_female:
+   # Probabilities ..
+   prob_male = p_male / (p_male + p_female)
+   prob_female = p_female / (p_male + p_female)
+
+   if prob_male > prob_female:
        P = 'Male'
-   elif p_male < p_female:
+   elif prob_male < prob_female:
        P = 'Female'
    else :
        P = 'Indeterminate'
 
-   print ("Bayes:: h: %d Pred: %s p_male: %f p_female: %f" % (h, P, p_male, p_female))
+   print ("Bayes:: h: %d Pred: %s p_male: %f p_female: %f" % (h, P, prob_male, prob_female))
    
 def PredictGenderHist(h, bin, min_num, max_num, male_hist, female_hist):
    pos = (int)(math.floor((bin-1) * ((float)(h-min_num)/(max_num-min_num))))
@@ -45,8 +49,15 @@ def PredictGenderHist(h, bin, min_num, max_num, male_hist, female_hist):
    female_cnt = female_hist[pos]
    total_cnt = male_cnt + female_cnt
 
-   p_male = (float)(male_cnt)/total_cnt
-   p_female = (float)(female_cnt)/total_cnt
+   if male_cnt != 0:
+     p_male = (float)(male_cnt)/total_cnt
+   else :
+     p_male = 0
+   
+   if female_cnt != 0:
+     p_female = (float)(female_cnt)/total_cnt
+   else :
+     p_female = 0
 
    if p_male > p_female:
        P = 'Male'
@@ -91,7 +102,7 @@ for row_idx in range(1, xl_sheet.nrows):    # Iterate through rows
 
 min_num = min(total_heights)
 max_num = max(total_heights)
-bins = 16  # log N + 1
+bins = 32  # max-min with 1inch resolution
 bin_width = ((float)((max_num-min_num)))/bins
 male_hist = np.zeros(bins, dtype=int)
 female_hist = np.zeros(bins, dtype=int)
@@ -112,40 +123,20 @@ print ("Female %d %d %d" % (len(female_heights), min(female_heights), max(female
 pprint.pprint (male_hist)
 pprint.pprint (female_hist)
 
-input_list = [55, 60, 65, 70, 75, 80]
+input_list = [55, 60, 65, 70, 75, 79, 80]
 
 for h in input_list:
   PredictGenderHist(h, bins, min_num, max_num, male_hist, female_hist)
   PredictGenderBayes(male_heights, female_heights, h)
 
+'''
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.hist((male_heights, female_heights), bins)
 plt.show()
-
-'''
-bins = 30
-bin_width = ((float)((max_num-min_num)))/bins
-male_hist = np.zeros(bins, dtype=int)
-female_hist = np.zeros(bins, dtype=int)
-
-
-male_hist = BuildHist(male_heights, bins, min_num, max_num)
-female_hist = BuildHist(female_heights, bins, min_num, max_num)
-
-print ("bins %d width %f " % (bins, bin_width))
-print ("Total %d %d %d" % (len(total_heights), min(total_heights), max(total_heights)))
-print ("Male %d %d %d" % (len(male_heights), min(male_heights), max(male_heights)))
-print ("Female %d %d %d" % (len(female_heights), min(female_heights), max(female_heights)))
-
-pprint.pprint (male_hist)
-pprint.pprint (female_hist)
-
-for h in input_list:
-  PredictGenderHist(h, bins, min_num, max_num, male_hist, female_hist)
 '''
 # Limited data
-bins = 8
+bins = 25
 total_heights = [] 
 male_heights = [] 
 female_heights = []
@@ -183,7 +174,7 @@ print ("Female %d %d %d" % (len(female_heights), min(female_heights), max(female
 pprint.pprint (male_hist)
 pprint.pprint (female_hist)
 
-input_list = [55, 60, 65, 70, 75, 80]
+input_list = [55, 60, 65, 70, 75, 79, 80]
 
 for h in input_list:
   PredictGenderHist(h, bins, min_num, max_num, male_hist, female_hist)
