@@ -8,11 +8,10 @@ import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-def GetMeanSigma(inp_array):
-   mean = np.mean(inp_array)
-   sigma = np.std(inp_array)
+def GetMeanCov(inp_array):
+   mean = np.mean(inp_array, axis=0)
 
-   return mean,sigma
+   return mean
 
 def Build2dHist(input_arr_h, bin_h, min_h, max_h, input_arr_hs, bin_hs, min_hs, max_hs):
    out = np.zeros((bin_h, bin_hs), dtype=int)
@@ -24,12 +23,60 @@ def Build2dHist(input_arr_h, bin_h, min_h, max_h, input_arr_hs, bin_hs, min_hs, 
 
    return out
 
-def PredictGenderBayes(male_arr, female_arr, h):
-   m_mean, m_sigma = GetMeanSigma(male_arr)
-   f_mean, f_sigma = GetMeanSigma(female_arr)
+def PredictGender2dBayes(male_arr, female_arr, h):
 
-   p_male = len(male_arr) * ((1/(math.sqrt(2*math.pi)*m_sigma))*math.exp((-0.5)*((h-m_mean)/m_sigma)**2))
-   p_female = len(female_arr) * ((1/(math.sqrt(2*math.pi)*f_sigma))*math.exp((-0.5)*((h-f_mean)/f_sigma)**2))
+   male_heights = []
+   male_handspan = []
+   female_heights = []
+   female_handspan = []
+
+   male_heights.append([list_var[0] for list_var in male_arr])
+   male_handspan.append([list_var[1] for list_var in male_arr])
+   female_heights.append([list_var[0] for list_var in female_arr])
+   female_handspan.append([list_var[1] for list_var in female_arr])
+
+   m_mean = np.mean(male_arr, axis=0)
+   f_mean = np.mean(female_arr, axis=0)
+
+   m_cov = np.cov(male_heights, male_handspan)
+   f_cov = np.cov(female_heights, female_handspan)
+   print "GetMeanCov ..."
+   print m_mean
+   print (m_cov)
+   print np.linalg.det(m_cov)
+   print (f_cov)
+   
+   arg1 = (1/((2*math.pi)*math.sqrt(np.linalg.det(m_cov))))
+   arg2 = h - m_mean
+   m_cov_arr = np.array(m_cov)
+   arg3 = m_cov_arr.transpose() 
+   arg2_arr = np.matrix(arg2) 
+   arg4 = arg2_arr.transpose()
+   arg5 = np.matrix(arg2) * np.matrix(arg3)
+   print "Details ..."
+   print h
+   print len(male_arr)
+   print arg1
+   print arg2
+   print arg3
+   print arg4 
+   print arg5
+   print (arg5 * np.matrix(arg4))
+   print math.exp((-0.5)*124)
+
+   p_male = len(male_arr) * arg1 *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4)))
+
+   arg1 = (1/((2*math.pi)*math.sqrt(np.linalg.det(f_cov))))
+   arg2 = (h-f_mean)
+   f_cov_arr = np.array(f_cov)
+   arg3 = f_cov_arr.transpose() 
+   arg2_arr = np.matrix(arg2) 
+   arg4 = arg2_arr.transpose()
+   arg5 = np.matrix(arg2) * np.matrix(arg3)
+
+   p_female = len(male_arr) * arg1 *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4)))
+
+   print ("p output %f %f " % (p_male, p_female))
 
    # Probabilities ..
    prob_male = p_male / (p_male + p_female)
@@ -42,7 +89,7 @@ def PredictGenderBayes(male_arr, female_arr, h):
    else :
        P = 'Indeterminate'
 
-   print ("Bayes:: h: %d Pred: %s p_male: %f p_female: %f" % (h, P, prob_male, prob_female))
+   print ("Bayes:: Pred: %s p_male: %f p_female: %f" % ( P, prob_male, prob_female))
    
 def PredictGender2dHist(h, hs, male_hist, bin_h, min_h, max_h, female_hist, bin_hs, min_hs, max_hs):
    pos_h = (int)(math.floor((bin_h-1) * ((float)(h-min_h)/(max_h-min_h))))
@@ -85,6 +132,8 @@ for idx, cell_obj in enumerate(row):
     print('(%s) %s %s' % (idx, cell_type_str, cell_obj.value))
 
 num_cols = xl_sheet.ncols   # Number of columns
+male_data = []
+female_data = []
 female_heights = []
 male_heights = []
 female_handspan = []
@@ -104,9 +153,11 @@ for row_idx in range(1, xl_sheet.nrows):    # Iterate through rows
     if gender.value == "'Male'":
        male_heights.append(height.value)
        male_handspan.append(handspan.value)
+       male_data.append([height.value, handspan.value])
     else :
        female_heights.append(height.value)
        female_handspan.append(handspan.value)
+       female_data.append([height.value, handspan.value])
 
 
 min_height = min(total_heights)
@@ -139,7 +190,7 @@ female_hist = Build2dHist(female_heights, bin_h, min_height, max_height, female_
 print male_hist
 print female_hist
 
-test_data = [(69, 17.5), (66,22), (70, 21.5), (69, 23.5)]
+test_data = [[69, 17.5], [66,22], [70, 21.5], [69, 23.5]]
 
 for h,hs in test_data:
    PredictGender2dHist(h, hs, male_hist, bin_h, min_height, max_height, female_hist, bin_hs, min_hs, max_hs)
@@ -154,104 +205,17 @@ ax.set_title('imshow: equidistant')
 im = plt.imshow(male_hist, interpolation='nearest', origin='low',
                 extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]])
 '''
-'''
-fig = plt.figure(figsize=(6, 3.2))
-
-ax = fig.add_subplot(111)
-ax.set_title('colorMap')
-plt.imshow(male_hist)
-ax.set_aspect('equal')
-cax = fig.add_axes([0.12, 0.1, 0.78, 0.8])
-cax.get_xaxis().set_visible(False)
-cax.get_yaxis().set_visible(False)
-cax.patch.set_alpha(0)
-cax.set_frame_on(False)
-plt.colorbar(orientation='vertical')
-plt.show()
-'''
-'''
-# Find bin size for height & HS and form a 2D array
-bins = 32  # max-min with 1inch resolution
-bin_width = ((float)((max_num-min_num)))/bins
-male_hist = np.zeros(bins, dtype=int)
-female_hist = np.zeros(bins, dtype=int)
-
-
-male_hist = BuildHist(male_heights, bins, min_num, max_num)
-female_hist = BuildHist(female_heights, bins, min_num, max_num)
 
 # PDFs 
 
-male_mean, male_sigma = GetMeanSigma(male_heights)
-female_mean, female_sigma = GetMeanSigma(female_heights)
-
-print ("bins %d width %f MMu: %f MSig: %f FMu: %f FSig: %f" % (bins, bin_width, male_mean, male_sigma, female_mean, female_sigma))
 print ("Total %d %d %d" % (len(total_heights), min(total_heights), max(total_heights)))
 print ("Male %d %d %d" % (len(male_heights), min(male_heights), max(male_heights)))
 print ("Female %d %d %d" % (len(female_heights), min(female_heights), max(female_heights)))
-pprint.pprint (male_hist)
-pprint.pprint (female_hist)
 
-input_list = [55, 60, 65, 70, 75, 79, 80]
+for test in test_data:
+   PredictGender2dBayes(male_data, female_data, test)
 
-for h in input_list:
-  PredictGenderHist(h, bins, min_num, max_num, male_hist, female_hist)
-  PredictGenderBayes(male_heights, female_heights, h)
-
-# Limited data
-bins = 25
-total_heights = [] 
-male_heights = [] 
-female_heights = []
-
-for row_idx in range(1, 201):    # Iterate through rows
-    #print ('Row: %s' % row_idx)   # Print row number
-    ft = xl_sheet.cell(row_idx, 0)
-    inch = xl_sheet.cell(row_idx, 1)
-    gender = xl_sheet.cell(row_idx, 2)
-
-    total_heights.append((ft.value*12)+inch.value)
-
-    if gender.value == 'Male':
-       male_heights.append((ft.value*12)+inch.value)
-    else :
-       female_heights.append((ft.value*12)+inch.value)
-
-min_num = min(total_heights)
-max_num = max(total_heights)
-bin_width = ((float)((max_num-min_num)))/bins
-male_hist = np.zeros(bins, dtype=int)
-female_hist = np.zeros(bins, dtype=int)
-
-
-male_hist = BuildHist(male_heights, bins, min_num, max_num)
-female_hist = BuildHist(female_heights, bins, min_num, max_num)
-
-male_mean, male_sigma = GetMeanSigma(male_heights)
-female_mean, female_sigma = GetMeanSigma(female_heights)
-
-print ("TRUNCATED !! bins %d width %f MMu: %f MSig: %f FMu: %f FSig: %f" % (bins, bin_width, male_mean, male_sigma, female_mean, female_sigma))
-print ("Total %d %d %d" % (len(total_heights), min(total_heights), max(total_heights)))
-print ("Male %d %d %d" % (len(male_heights), min(male_heights), max(male_heights)))
-print ("Female %d %d %d" % (len(female_heights), min(female_heights), max(female_heights)))
-pprint.pprint (male_hist)
-pprint.pprint (female_hist)
-
-input_list = [55, 60, 65, 70, 75, 79, 80]
-
-for h in input_list:
-  PredictGenderHist(h, bins, min_num, max_num, male_hist, female_hist)
-  PredictGenderBayes(male_heights, female_heights, h)
 '''
-'''
-xaxis = np.arange(min_num, max_num, bin_width)
-plt.hist([male_hist, female_hist], bins=xaxis, histtype='bar')
-plt.xlabel('Height (Inches)')
-plt.ylabel('Count')
-plt.title('Male Histogram')
-plt.grid(True)
-plt.show()
-    for col_idx in range(0, num_cols):  # Iterate through columns
-        cell_obj = xl_sheet.cell(row_idx, col_idx)  # Get cell object by row, col
-        print ('Column: [%s] cell_obj: [%s]' % (col_idx, cell_obj))
+   p_male = len(male_arr) * (1/((2*math.pi)*math.sqrt(np.linalg.det(m_cov))))*math.exp((-0.5)*((h-m_mean) * np.matrix.transpose(m_cov) * np.matrix.transpose(h-m_mean)))
+   p_female = len(female_arr) * (1/((2*math.pi)*math.sqrt(np.linalg.det(f_cov))))*math.exp((-0.5)*((h-f_mean) * np.matrix.transpose(f_cov) * np.matrix.transpose(h-f_mean)))
 '''
