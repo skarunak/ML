@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import xlwt
 import xlrd
 from xlrd.sheet import ctype_text  
 import numpy as np
@@ -42,14 +43,14 @@ def PredictGender2dBayes(male_arr, female_arr, h):
    f_cov = np.cov(female_heights, female_handspan)
    print "GetMeanCov ..."
    print m_mean
+   print f_mean
    print (m_cov)
-   print np.linalg.det(m_cov)
    print (f_cov)
-   
+   print "Male details ..." 
    arg1 = (1/((2*math.pi)*math.sqrt(np.linalg.det(m_cov))))
    arg2 = h - m_mean
    m_cov_arr = np.array(m_cov)
-   arg3 = m_cov_arr.transpose() 
+   arg3 = np.linalg.inv(m_cov) 
    arg2_arr = np.matrix(arg2) 
    arg4 = arg2_arr.transpose()
    arg5 = np.matrix(arg2) * np.matrix(arg3)
@@ -63,13 +64,12 @@ def PredictGender2dBayes(male_arr, female_arr, h):
    print arg5
    print (arg5 * np.matrix(arg4))
    print math.exp((-0.5)*124)
-
    p_male = len(male_arr) * arg1 *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4)))
 
    arg1 = (1/((2*math.pi)*math.sqrt(np.linalg.det(f_cov))))
    arg2 = (h-f_mean)
    f_cov_arr = np.array(f_cov)
-   arg3 = f_cov_arr.transpose() 
+   arg3 = np.linalg.inv(f_cov) 
    arg2_arr = np.matrix(arg2) 
    arg4 = arg2_arr.transpose()
    arg5 = np.matrix(arg2) * np.matrix(arg3)
@@ -187,8 +187,25 @@ female_hist = np.zeros((bin_h, bin_hs), dtype=int)
 male_hist = Build2dHist(male_heights, bin_h, min_height, max_height, male_handspan, bin_hs, min_hs, max_hs)
 female_hist = Build2dHist(female_heights, bin_h, min_height, max_height, female_handspan, bin_hs, min_hs, max_hs)
 
+workbook = xlwt.Workbook() 
+sheet = workbook.add_sheet("Male")
 print male_hist
+
+for row,data in enumerate(male_hist):
+	list = data.tolist()
+	str_list = str(list).strip('[]')
+	sheet.write(row, 0, str_list)
 print female_hist
+
+sheet = workbook.add_sheet("Female")
+for row,data in enumerate(female_hist):
+	list = data.tolist()
+	str_list = str(list).strip('[]')
+	print row, str_list
+#	str = ' '.join(list)
+#	print str
+	sheet.write(row, 0, str_list)
+workbook.save("2dHist.xls") 
 
 test_data = [[69, 17.5], [66,22], [70, 21.5], [69, 23.5]]
 
