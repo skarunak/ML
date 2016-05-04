@@ -90,7 +90,23 @@ def PredictGender2dBayes(male_arr, female_arr, h):
        P = 'Indeterminate'
 
    print ("Bayes:: Pred: %s p_male: %f p_female: %f" % ( P, prob_male, prob_female))
-   
+'''
+
+   test_h = np.array([0, 0])
+   test_mean = np.array([1, 1])
+   test_cov = np.array([[9,1], [1,4]])
+   arg1 = (1/((2*math.pi)*math.sqrt(np.linalg.det(test_cov))))
+   arg2 = (test_h-test_mean)
+   f_cov_arr = np.array(test_cov)
+   arg3 = np.linalg.inv(test_cov) 
+   arg2_arr = np.matrix(arg2) 
+   arg4 = arg2_arr.transpose()
+   arg5 = np.matrix(arg2) * np.matrix(arg3)
+   p_test = arg1 *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4)))
+   print "Test data ..."
+   print p_test
+'''
+
 def PredictGender2dHist(h, hs, male_hist, bin_h, min_h, max_h, female_hist, bin_hs, min_hs, max_hs):
    pos_h = (int)(math.floor((bin_h-1) * ((float)(h-min_h)/(max_h-min_h))))
    pos_hs = (int)(math.floor((bin_hs-1) * ((float)(hs-min_hs)/(max_hs-min_hs))))
