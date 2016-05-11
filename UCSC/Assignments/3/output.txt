@@ -1,0 +1,30 @@
+senthil@senthil-HP-Pavilion-dv6-Notebook-PC:~/Desktop/ML/UCSC/Assignments/3$ ./A3.py
+Labels: mg 2049 num 60000
+Images: mg 2051 num 60000 rows 28 cols 28
+Data set: sz 12396 
+Z : (12396, 784) 
+C : (784, 784) 
+V : (784, 784) 
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Done with image to text operation
+Hist:: P1: 1294,-1694,15 P2: 1463,-1586,15
+./A3.py:170: VisibleDeprecationWarning: using a non-integer number instead of an integer will result in an error in the future
+  out = np.zeros((bin_h, bin_hs), dtype=int)
+Labels: mg 2049 num 10000
+Images: mg 2051 num 10000 rows 28 cols 28
+Hist result (Dig1 & Dig2) : correct 1964 wrong 71 Indet 3 
+Gaus result (Dig1 & Dig2) : correct 1960 wrong 78 Indet 0 
+Hist result (Dig1): correct 967 wrong 42 Indet 1 
+Gaus result (Dig1): correct 976 wrong 34 Indet 0 
+Hist result (Dig2): correct 997 wrong 29 Indet 2 
+Gaus result (Dig2): correct 984 wrong 44 Indet 0 
+Hist result (OtherDigs): correct 0 wrong 7958 Indet 4 
+Gaus result (OtherDigs): correct 0 wrong 7962 Indet 0 
+done ..
+
