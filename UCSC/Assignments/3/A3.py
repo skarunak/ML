@@ -251,10 +251,9 @@ def get_lables(dataset, lbl1, lbl2, lbl3):
     second = []
     third = []
     for lbl, vec in read(dataset):
+        third.append((lbl, vec))
         if (lbl == lbl1 or lbl == lbl2):
            combined.append((lbl, vec))
-        else:
-           third.append((lbl, vec))
 
         if (lbl == lbl1):
            first.append((lbl, vec))
@@ -274,6 +273,8 @@ def predictlable(classifier, test_inp, dig1_hist, p1_bin, p1_min, p1_max, dig2_h
    correct = 0
    wrong = 0
    indet = 0
+   idx = 0
+   FP = 0
 
    if classifier is 'gaus':
        m_mean, m_cov, m_first, f_mean, f_cov, f_first = BuildGender2dBayes(P1P2_dig1, P1P2_dig2)
@@ -298,7 +299,23 @@ def predictlable(classifier, test_inp, dig1_hist, p1_bin, p1_min, p1_max, dig2_h
         indet = indet + 1
      else:
         wrong = wrong + 1
-   
+        if out == second:
+           FP = FP + 1
+        #print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
+        #if (idx == 15):
+        #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
+        #   write_image_to_text_file(vec, classifier+str(idx))     
+        #if (idx == 31):
+        #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
+        #   write_image_to_text_file(vec, classifier+str(idx))
+        #if (idx == 393):
+        #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
+        #   write_image_to_text_file(vec, classifier+str(idx))     
+        #if (idx == 696):
+        #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
+        #   write_image_to_text_file(vec, classifier+str(idx))
+     idx = idx + 1
+   print "False positive: ", FP
    return correct, wrong, indet
 
 #Filter 3 & 4
@@ -322,7 +339,7 @@ for lbl,vec in read():
          lbl2.append((lbl, vec))
 '''
 lbl_img_list = sorted(lbl_img_list, key=lambda key: key[0])
-print ("Data set: sz %d " % (len(lbl_img_list)))
+print ("Data set: sz %d #of-%d %d #of-%d %d" % (len(lbl_img_list), first, len(lbl1), second, len(lbl2)))
 
 X_arr = np.stack((j for i,j in lbl_img_list))
 
@@ -374,21 +391,23 @@ ax.scatter (P1P2_dig1[:,0], P1P2_dig1[:,1], c='r', marker='+')
 ax.scatter (P1P2_dig2[:,0], P1P2_dig2[:,1], c='b', marker='+')
 ax.set_xlabel("p1")
 ax.set_ylabel("p2")
+plt.savefig("scatter.png")
 #plt.show()
 
 # Recontruction with loss
 R_ = P1P2 * V[:2,:]
 X_ = R_ + mean
 
+
 write_image_to_text_file(np.array(X_[0]), 'rec_1_'+str(lbl_img_list[0][0]))
 write_image_to_text_file(np.array(X_[1]), 'rec_2_'+ str(lbl_img_list[1][0]))
-write_image_to_text_file(np.array(X_[1200]), 'rec_3_'+str(lbl_img_list[1200][0]))
-write_image_to_text_file(np.array(X_[1201]), 'rec_4_'+str(lbl_img_list[1201][0]))
+write_image_to_text_file(np.array(X_[len(lbl1)]), 'rec_3_'+str(lbl_img_list[len(lbl1)][0]))
+write_image_to_text_file(np.array(X_[len(lbl1)+1]), 'rec_4_'+str(lbl_img_list[len(lbl1)+1][0]))
 
 write_image_to_text_file(np.array(X_arr[0]), 'orig_1_'+str(lbl_img_list[0][0]))
 write_image_to_text_file(np.array(X_arr[1]), 'orig_2_'+ str(lbl_img_list[1][0]))
-write_image_to_text_file(np.array(X_arr[1200]), 'orig_3_'+str(lbl_img_list[1200][0]))
-write_image_to_text_file(np.array(X_arr[1201]), 'orig_4_'+str(lbl_img_list[1201][0]))
+write_image_to_text_file(np.array(X_arr[len(lbl1)]), 'orig_3_'+str(lbl_img_list[len(lbl1)][0]))
+write_image_to_text_file(np.array(X_arr[len(lbl1)+1]), 'orig_4_'+str(lbl_img_list[len(lbl1)+1][0]))
 # Loss less reconstruction
 R = P * V
 
@@ -437,16 +456,16 @@ print ("Gaus result (Dig2): correct %d wrong %d Indet %d " % (correct, wrong, in
 
 test_inp = test_lbl3
 correct, wrong, indet = predictlable('hist', test_inp, dig1_hist, p1_bin, p1_min, p1_max, dig2_hist, p2_bin, p2_min, p2_max)
-print ("Hist result (OtherDigs): correct %d wrong %d Indet %d " % (correct, wrong, indet))
+print ("Hist result (AllDigs): correct %d wrong %d Indet %d " % (correct, wrong, indet))
 correct, wrong, indet = predictlable('gaus', test_inp, dig1_hist, p1_bin, p1_min, p1_max, dig2_hist, p2_bin, p2_min, p2_max)
-print ("Gaus result (OtherDigs): correct %d wrong %d Indet %d " % (correct, wrong, indet))
-
+print ("Gaus result (AllDigs): correct %d wrong %d Indet %d " % (correct, wrong, indet))
 # Gaussian
 
 #test_p1p2 = getp1p2oftest(test_lbl1[0][1], mean, V)
 
 #PredictGender2dBayes(P1P2_dig1, P1P2_dig2, test_p1p2)
 print "done .."
+#plt.show()
 '''
 correct = 0
 wrong = 0
