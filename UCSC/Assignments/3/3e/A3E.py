@@ -15,15 +15,19 @@ def BuildGender2dBayes(p_components, n_lbls):
 
    means = []
    covs = []
-   args1 = []
+   arg1s = []
  
    rows, dim = p_components[0].shape
-
+   pow = (float)(dim)/2
+   print "BuildGender2dBayes : dimensions " , dim
+   idx = 0
+   
    # Use dim in the formula
-   for idx in n_lbls:
-     means = means.append(np.mean(p_components[idx], axis=0))
-     covs = covs.append(np.cov(p_components[idx], rowvar=False))
-     arg1s = arg1s.append((1/((2*math.pi)*math.sqrt(np.linalg.det(covs[idx])))))
+   while idx < n_lbls:
+     means.append(np.mean(p_components[idx], axis=0))
+     covs.append(np.cov(p_components[idx], rowvar=False))
+     arg1s.append((1/(((2*math.pi)**pow)*math.sqrt(np.linalg.det(covs[idx])))))
+     idx = idx + 1
 
    return means, covs, arg1s 
 
@@ -34,21 +38,24 @@ def PredictGender2dBayes(p_comps, n_lbls, test_p_comps, means, covs, arg1s):
    probs = []
    idx = 0
 
-   for idx in n_lbls:
-      arg2 = h - m_mean
-      m_cov_arr = np.array(m_cov)
-      arg3 = np.linalg.inv(m_cov) 
+   while idx < n_lbls:
+      arg2 = test_p_comps - means[idx]
+      #m_cov_arr = np.array(covs[idx])
+      arg3 = np.linalg.inv(covs[idx]) 
       arg2_arr = np.matrix(arg2) 
       arg4 = arg2_arr.transpose()
       arg5 = np.matrix(arg2) * np.matrix(arg3)
 
-      p_digs.append(len(male_arr) * arg1 *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4))))
+      #print "PredictGender2dBayes: component lengths " , len(p_comps[idx])
+      p_digs.append(len(p_comps[idx]) * arg1s[idx] *math.exp((-0.5)*(np.matrix(arg2) * np.matrix(arg3) * np.matrix(arg4))))
       p_total = p_total + p_digs[idx]
+      idx = idx + 1
 
    # Probabilities ..
    idx = 0
-   for idx in n_lbls:
-     probs.append(p_digs[idx] / p_total)
+   while idx < n_lbls:
+     probs.append((float)(p_digs[idx]) / p_total)
+     idx = idx + 1
 
    return probs
 
@@ -128,7 +135,7 @@ def get_lables(dataset):
        lbl_lengths[idx] = 0
 
     for lbl, vec in read(dataset):
-           #if (lbl < 4):
+           #if (lbl == 4 || lbl == 3 ):
               combined.append((lbl, vec))
               lbl_lengths[lbl] = lbl_lengths[lbl]+1
     
@@ -136,7 +143,8 @@ def get_lables(dataset):
 
 def getp1p2oftest(img, mean, V):
     z = img - mean
-    zVT = V[:dim,:].transpose()
+    #zVT = V[:dim,:].transpose()
+    zVT = V[:,:dim]
     zp1p2 = z * zVT
     return zp1p2
 
@@ -146,31 +154,25 @@ def predictlable(classifier, test_inp, test_lbl_lengths):
    wrong = 0
    indet = 0
    idx = 0
-   FP = 0
+   perf = np.zeros((10,10), dtype=int)
 
    if classifier is 'gaus':
-       mean_list, cov_list, first_arg_list = BuildGender2dBayes(P1P2_digs)
+       mean_list, cov_list, first_arg_list = BuildGender2dBayes(P1P2_digs, len(test_lbl_lengths))
 
    for lbl, vec in test_inp:
      test_p1p2 = getp1p2oftest(vec, mean, V)
      if classifier is 'gaus':
        prob_digs = PredictGender2dBayes(P1P2_digs, len(test_lbl_lengths), test_p1p2, mean_list, cov_list, first_arg_list)
 
-     if p_dig1 > p_dig2:
-        out = first
-     elif p_dig1 < p_dig2:
-        out = second
-     else :
-        out = -1
 
-     if (out == lbl):
+     max_prob = max(prob_digs)
+     predicted_lbl = prob_digs.index(max_prob)
+
+     if (predicted_lbl == lbl):
         correct = correct + 1
-     elif (out == -1):
-        indet = indet + 1
      else:
         wrong = wrong + 1
-        if out == second:
-           FP = FP + 1
+        #print "Test lbl Prediced lbl prob " , lbl, predicted_lbl, max_prob
         #print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
         #if (idx == 15):
         #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
@@ -185,10 +187,11 @@ def predictlable(classifier, test_inp, test_lbl_lengths):
         #   print ("Wrong:: classifier: %s idx %d " % (classifier, idx))
         #   write_image_to_text_file(vec, classifier+str(idx))
      idx = idx + 1
-   print "False positive: ", FP
-   return correct, wrong, indet
+     perf[lbl][predicted_lbl] = perf[lbl][predicted_lbl] + 1
+   
+   return correct, wrong, perf
 
-dim = 3
+dim = 5
 lbl_img_list = [] # (lable, image) sorted by lable
 
 lbl_img_list, lbl_lengths = get_lables('training')
@@ -227,6 +230,9 @@ V_row, V_col = V.shape
 print ("V : (%d, %d) " % (V_row, V_col))
 
 V = np.matrix(V)
+#V = np.matrix(V).transpose()
+#TV = V.transpose()
+#P = Z * TV
 P = Z * V
 P_mean = np.mean(P, axis=0)
 #print "P_mean ..", P_mean
@@ -289,14 +295,15 @@ write_image_to_text_file(np.array(X_arr[len(lbl1)+101]), 'orig_4_'+str(lbl_img_l
 # Loss less reconstruction
 #R = P * V
 
-test_lbl_img_list = [] # (lable, image) sorted by lable
+#test_lbl_img_list = [] # (lable, image) sorted by lable
 test_lbl_img_list, test_lbl_lengths = get_lables('testing')
 
 bayes_count = 0
 test_inp = test_lbl_img_list
 
-correct, wrong, indet = predictlable('gaus', test_lbl_img_list, test_lbl_lengths)
-print ("Gaus result (AllDigs) : correct %d wrong %d Indet %d " % (correct, wrong, indet))
+correct, wrong, perf = predictlable('gaus', test_lbl_img_list, test_lbl_lengths)
+print ("Gaus result (AllDigs) : correct %d wrong %d " % (correct, wrong))
+print "Performance .. \n" , perf
 
 print "done .."
 
