@@ -17,16 +17,16 @@ def BuildGender2dBayes(p_components, n_lbls):
    covs = []
    arg1s = []
  
-   rows, dim = p_components[0].shape
-   pow = (float)(dim)/2
-   print "BuildGender2dBayes : dimensions " , dim
+   rows, dimensions = p_components[0].shape
+   pow_val = (float)(dimensions)/2
+   print "BuildGender2dBayes : dimensions " , dimensions
    idx = 0
    
    # Use dim in the formula
    while idx < n_lbls:
      means.append(np.mean(p_components[idx], axis=0))
      covs.append(np.cov(p_components[idx], rowvar=False))
-     arg1s.append((1/(((2*math.pi)**pow)*math.sqrt(np.linalg.det(covs[idx])))))
+     arg1s.append((1/(((2*math.pi)**pow_val)*math.sqrt(np.linalg.det(covs[idx])))))
      idx = idx + 1
 
    return means, covs, arg1s 
@@ -110,8 +110,12 @@ def show(image):
 
 def write_image_to_text_file(image_array, digit_name):
     flat_arr = image_array.ravel()
-    digt_image_text = os.path.join(".", digit_name+'_image_text')
+    digt_image_text = os.path.join(".", digit_name)
     fdesc = open (digt_image_text, "w")
+    fdesc.write('P2' + "\n")
+    fdesc.write(str(28) + "\n")
+    fdesc.write(str(28) + "\n")
+    fdesc.write(str(255) + "\n")
     for count in range (len(flat_arr)):
         #fdesc.write(str(image_array[count]) + "\n")
         fdesc.write(str(int(math.floor(abs(flat_arr[count])))) + "\n")
@@ -135,7 +139,7 @@ def get_lables(dataset):
        lbl_lengths[idx] = 0
 
     for lbl, vec in read(dataset):
-           #if (lbl == 4 || lbl == 3 ):
+           #if (lbl == 4 or lbl == 3 ):
               combined.append((lbl, vec))
               lbl_lengths[lbl] = lbl_lengths[lbl]+1
     
@@ -155,6 +159,22 @@ def predictlable(classifier, test_inp, test_lbl_lengths):
    indet = 0
    idx = 0
    perf = np.zeros((10,10), dtype=int)
+   n_imgs = 3
+   idx_08 = 0
+   idx_18 = 0
+   idx_23 = 0
+   idx_28 = 0
+   idx_38 = 0
+   idx_79 = 0
+   idx_60 = 0
+   idx_90 = 0
+   idx_0 = 0
+   idx_1 = 0
+   idx_2 = 0
+   idx_3 = 0
+   idx_7 = 0
+   idx_6 = 0
+   idx_9 = 0
 
    if classifier is 'gaus':
        mean_list, cov_list, first_arg_list = BuildGender2dBayes(P1P2_digs, len(test_lbl_lengths))
@@ -170,6 +190,34 @@ def predictlable(classifier, test_inp, test_lbl_lengths):
 
      if (predicted_lbl == lbl):
         correct = correct + 1
+        if (lbl == 0):
+          if idx_0 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_0))     
+            idx_0 = idx_0 + 1
+        if (lbl == 1):
+          if idx_1 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+  str(predicted_lbl) + '_itr_' + str(idx_1))     
+            idx_1 = idx_1 + 1
+        if (lbl == 2):
+          if idx_2 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_2))     
+            idx_2 = idx_2 + 1
+        if (lbl == 3):
+          if idx_3 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_3))     
+            idx_3 = idx_3 + 1
+        if (lbl == 6):
+          if idx_6 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_6))     
+            idx_6 = idx_6 + 1
+        if (lbl == 7):
+          if idx_7 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_7))     
+            idx_7 = idx_7 + 1
+        if (lbl == 9):
+          if idx_9 < n_imgs:
+            write_image_to_text_file(vec, 'T_' + str(lbl)+ str(predicted_lbl) + '_itr_' + str(idx_9))     
+            idx_9 = idx_9 + 1
      else:
         wrong = wrong + 1
         #print "Test lbl Prediced lbl prob " , lbl, predicted_lbl, max_prob
@@ -188,10 +236,42 @@ def predictlable(classifier, test_inp, test_lbl_lengths):
         #   write_image_to_text_file(vec, classifier+str(idx))
      idx = idx + 1
      perf[lbl][predicted_lbl] = perf[lbl][predicted_lbl] + 1
+     if (lbl == 0 and predicted_lbl == 8):
+        if idx_08 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_08))     
+          idx_08 = idx_08 + 1
+     if (lbl == 1 and predicted_lbl == 8):
+        if idx_18 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_18))     
+          idx_18 = idx_18 + 1
+     if (lbl == 2 and predicted_lbl == 3):
+        if idx_23 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_23))     
+          idx_23 = idx_23 + 1
+     if (lbl == 2 and predicted_lbl == 8):
+        if idx_28 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_28))     
+          idx_28 = idx_28 + 1
+     if (lbl == 3 and predicted_lbl == 8):
+        if idx_38 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_38))     
+          idx_38 = idx_38 + 1
+     if (lbl == 7 and predicted_lbl == 9):
+        if idx_79 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_79))     
+          idx_79 = idx_79 + 1
+     if (lbl == 6 and predicted_lbl == 0):
+        if idx_60 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_60))     
+          idx_60 = idx_60 + 1
+     if (lbl == 9 and predicted_lbl == 0):
+        if idx_90 < n_imgs:
+          write_image_to_text_file(vec, 'T_' + str(lbl)+ 'P_' + str(predicted_lbl) + '_itr_' + str(idx_90))     
+          idx_90 = idx_90 + 1
    
    return correct, wrong, perf
 
-dim = 5
+#dim = 5
 lbl_img_list = [] # (lable, image) sorted by lable
 
 lbl_img_list, lbl_lengths = get_lables('training')
@@ -225,6 +305,28 @@ print ("C : (%d, %d) " % (cov_row, cov_col))
 # Eigen 
 eg_val, V = np.linalg.eig(C)
 #print ("Eig.Val : (%d, %d) " % (eg_val[0].real, eg_val[1].real))
+eg_val_list = eg_val.real.tolist()
+eg_val_tot = sum(eg_val_list)
+
+# Determine dimensions to use for 70% variance
+var = []
+comp = range(784)
+dim = 0
+for idx, val in enumerate(eg_val_list):
+   agg_eg_val = sum(eg_val_list[0:idx+1])
+   var.append(agg_eg_val/eg_val_tot)
+   if (var[idx] >= 0.8 and dim==0): 
+      dim = idx + 1
+
+# Plot variance and principal components
+#fig, ax = plt.subplots()
+#ax.grid(True)
+#ax.plot(comp[0:100], var[0:100])
+#ax.set_xlabel("Principal components")
+#ax.set_ylabel("Variance")
+#plt.savefig("Var_Pcomps.png")
+#plt.show()
+
 V = V.real
 V_row, V_col = V.shape
 print ("V : (%d, %d) " % (V_row, V_col))
@@ -278,20 +380,21 @@ plt.show()
 '''
 
 # Recontruction with loss
-R_ = P1P2 * V[:dim,:]
+VT = V.transpose()
+R_ = P1P2 * VT[:dim,:]
 X_ = R_ + mean
 
-'''
-write_image_to_text_file(np.array(X_[0]), 'rec_1_'+str(lbl_img_list[0][0]))
-write_image_to_text_file(np.array(X_[1]), 'rec_2_'+ str(lbl_img_list[1][0]))
-write_image_to_text_file(np.array(X_[len(lbl1)]), 'rec_3_'+str(lbl_img_list[len(lbl1)][0]))
-write_image_to_text_file(np.array(X_[len(lbl1)+1]), 'rec_4_'+str(lbl_img_list[len(lbl1)+1][0]))
+# Reconstruction images
+idx = 0
+while idx < len(lbl_lengths): 
+   write_image_to_text_file(np.array(X_[sum(lbl_lengths[:idx])]), 'rec_1_'+  str(lbl_img_list[sum(lbl_lengths[:idx])][0]))
+   write_image_to_text_file(np.array(X_[sum(lbl_lengths[:idx])+1]), 'rec_2_'+ str(lbl_img_list[sum(lbl_lengths[:idx])+1][0]))
+   write_image_to_text_file(np.array(X_[sum(lbl_lengths[:idx])+2]), 'rec_3_'+str(lbl_img_list[sum(lbl_lengths[:idx])+2][0]))
+   write_image_to_text_file(np.array(X_arr[sum(lbl_lengths[:idx])]), 'orig_1_'+  str(lbl_img_list[sum(lbl_lengths[:idx])][0]))
+   write_image_to_text_file(np.array(X_arr[sum(lbl_lengths[:idx])+1]), 'orig_2_'+ str(lbl_img_list[sum(lbl_lengths[:idx])+1][0]))
+   write_image_to_text_file(np.array(X_arr[sum(lbl_lengths[:idx])+2]), 'orig_3_'+str(lbl_img_list[sum(lbl_lengths[:idx])+2][0]))
+   idx = idx + 1
 
-write_image_to_text_file(np.array(X_arr[0]), 'orig_1_'+str(lbl_img_list[0][0]))
-write_image_to_text_file(np.array(X_arr[1]), 'orig_2_'+ str(lbl_img_list[1][0]))
-write_image_to_text_file(np.array(X_arr[len(lbl1)+100]), 'orig_3_'+str(lbl_img_list[len(lbl1)+100][0]))
-write_image_to_text_file(np.array(X_arr[len(lbl1)+101]), 'orig_4_'+str(lbl_img_list[len(lbl1)+101][0]))
-'''
 # Loss less reconstruction
 #R = P * V
 
